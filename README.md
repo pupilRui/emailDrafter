@@ -10,9 +10,7 @@ I've prepared a presentation that provides an overview of my work and experience
 
 ## Projects
 
-- **Project 1**: Description of the first project.
-- **Project 2**: Description of the second project.
-- ... (Add more projects as needed)
+- **Project 1**: Generate AI Customer Support Assistant Email Drafter
 
 ## Contact
 
