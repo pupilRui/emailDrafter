@@ -67,6 +67,7 @@ def generate_reply():
     # Step 4: Generate the email body
     contentGenerator = EmailGenerator(openai.api_key)
     reply = contentGenerator.generate_email(comment, translated_summary, sentiment, language, products)
+    reply = contentGenerator.chain_of_thought_reasoning_generate_email(comment, translated_summary, sentiment, language, products)
     return jsonify({'reply': reply, 'subject': email_subject})
 
 if __name__ == '__main__':
