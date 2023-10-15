@@ -1,4 +1,5 @@
 import openai
+from .ChatModelCompletor import get_completion_from_messages as get_completion_from_messages
 
 class EmailSubjectGenerator:
     def __init__(self, api_key):
@@ -6,17 +7,26 @@ class EmailSubjectGenerator:
         openai.api_key = self.api_key
 
     def generate_subject(self, customer_comment, language="English"):
-        # Use OpenAI API to generate an email subject based on the customer's comment and desired language
-        prompt = f"Inferring an email subject from the following customer comment: '{customer_comment}' in the desired language: '{language}', directly return the subject without start with 'Possible email subject:'"
+        system_message = f"""
+            You are a customer service representative of the store.\
+            You need to generate an email subject based on the customer's comment and in {language} language.\
+            The user comment will be provided delimited with \
+            #### characters.\
+            Only generate an email subject, with nothing else.\
+        """
 
-        response = openai.Completion.create(
-            engine="gpt-3.5-turbo-instruct",  # specify the engine here
-            prompt=prompt,
-            max_tokens=50,
-            temperature=0.7
-        )
+        user_message_1 = f"""
+            {customer_comment} \
+        """
 
-        return response.choices[0].text.strip()
+        messages =  [
+            {'role':'system',
+            'content': system_message},
+            {'role':'user',
+            'content': f"####{user_message_1}####"},
+        ]
+
+        return get_completion_from_messages(messages)
 
 class CommentSummarizer:
     def __init__(self, api_key):
@@ -24,27 +34,26 @@ class CommentSummarizer:
         openai.api_key = self.api_key
 
     def summarize_and_translate(self, customer_comment, target_language):
-        # Step 3.1: Generate the summary in English
-        prompt_summary = f"Summarize the following customer comment: '{customer_comment}'."
-        response_summary = openai.Completion.create(
-            engine="gpt-3.5-turbo-instruct",
-            prompt=prompt_summary,
-            max_tokens=100,
-            temperature=0.7
-        )
-        english_summary = response_summary.choices[0].text.strip()
+        system_message = f"""
+            You are a customer comment summarizer of the store.\
+            You need to summarize the following customer comment and translate it into {target_language} language.\
+            The customer comment will be delimited with \
+            #### characters.\
+            Only generate a summary, with nothing else.\
+        """
 
-        # Step 3.2: Translate the English summary into the customer's selected language
-        prompt_translation = f"Translate the following English summary into {target_language}: '{english_summary}'."
-        response_translation = openai.Completion.create(
-            engine="gpt-3.5-turbo-instruct",
-            prompt=prompt_translation,
-            max_tokens=100,
-            temperature=0.7
-        )
-        translated_summary = response_translation.choices[0].text.strip()
+        user_message_1 = f"""
+            {customer_comment} \
+        """
 
-        return translated_summary
+        messages =  [
+            {'role':'system',
+            'content': system_message},
+            {'role':'user',
+            'content': f"####{user_message_1}####"},
+        ]
+
+        return get_completion_from_messages(messages)
     
 class EmailGenerator:
     def __init__(self, api_key):
@@ -52,19 +61,32 @@ class EmailGenerator:
         openai.api_key = self.api_key
 
     def generate_email(self, customer_comment, comment_summary, sentiment, language, products):
-        # Generate an email based on the customer's comment, its summary, sentiment, and language
-        prompt_email = (f"Given the customer's comment: '{customer_comment}', "
-                        f"its summary: '{comment_summary}', its sentiment: '{sentiment}', "
-                        f"and the desired language: '{language}', "
-                        f"and the product info: '{products}', craft an email response in 100 words:")
-        
-        response_email = openai.Completion.create(
-            engine="gpt-3.5-turbo-instruct",
-            prompt=prompt_email,
-            max_tokens=600,
-            temperature=0.7
-        )
-        email_content = response_email.choices[0].text.strip()
+        system_message = f"""
+            You are a customer service representative of the store.\
+            You need to generate an email based on the customer's comment, its summary, sentiment, and language.\
+            The customer comment will be delimited with \
+            #### characters.\
+            The summary will be delimited with \
+            ##### characters.\
+            The sentiment will be delimited with \
+            ###### characters.\
+            Your email should be written in {language}.\
+            The product info is {products}.\
+            Only generate an email response, with nothing else.\
+        """
 
-        return email_content
+        user_message_1 = f"""
+            ####{customer_comment}#### \
+            #####{comment_summary}##### \
+            ######{sentiment}###### \
+        """
+
+        messages =  [
+            {'role':'system',
+            'content': system_message},
+            {'role':'user',
+            'content': f"{user_message_1}"},
+        ]
+
+        return get_completion_from_messages(messages)
 

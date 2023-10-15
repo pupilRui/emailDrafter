@@ -1,4 +1,5 @@
 import openai
+from .ChatModelCompletor import get_completion_from_messages as get_completion_from_messages
 
 class CommentSentimentAnalyzer:
     def __init__(self, api_key):
@@ -6,14 +7,25 @@ class CommentSentimentAnalyzer:
         openai.api_key = self.api_key
 
     def analyze_sentiment(self, customer_comment):
-        # Sentiment analysis of the customer's comment
-        prompt_sentiment = f"Analyze the sentiment of the following customer comment: '{customer_comment}'. Is it Positive or Negative?"
-        response_sentiment = openai.Completion.create(
-            engine="gpt-3.5-turbo-instruct",
-            prompt=prompt_sentiment,
-            max_tokens=50,
-            temperature=0.7
-        )
-        sentiment = response_sentiment.choices[0].text.strip()
+        delimiter = "####"
 
-        return sentiment
+        system_message = f"""
+        You are a customer intention analyzer of the store.\
+        Analyze the sentiment of the following customer comment, tell the colleagues that is it Positive or Negative.\
+        The customer comment will be delimited with \
+        {delimiter} characters.\
+        Only reply Positive Or Negative, with nothing else.\
+        """
+
+        user_message_1 = f"""
+            {customer_comment} \
+        """
+
+        messages =  [  
+            {'role':'system', 
+            'content': system_message},    
+            {'role':'user', 
+            'content': f"{delimiter}{user_message_1}{delimiter}"},  
+        ] 
+        
+        return get_completion_from_messages(messages)

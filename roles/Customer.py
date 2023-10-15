@@ -1,16 +1,5 @@
 import openai
-
-def get_completion_from_messages(messages, 
-                                 model="gpt-3.5-turbo", 
-                                 temperature=0, 
-                                 max_tokens=500):
-    response = openai.ChatCompletion.create(
-        model=model,
-        messages=messages,
-        temperature=temperature, 
-        max_tokens=max_tokens, 
-    )
-    return response.choices[0].message["content"]
+from .ChatModelCompletor import get_completion_from_messages as get_completion_from_messages
 
 class Customer:
     def __init__(self, api_key, products, language="en"):
@@ -21,21 +10,31 @@ class Customer:
 
     def generate_question_or_comment(self):
         # Create a list of product names
-        product_list = ", ".join(self.products.keys())
-        
-        # Use OpenAI API to generate a question or comment based on the product list
-        prompt = (f"Craft a text message in {self.language} language. "
-                f"Inquire about one or two of the following products: {product_list}. "
-                f"Ask the store for more details in about 40 words.")
-        
-        response = openai.Completion.create(
-            engine="gpt-3.5-turbo-instruct",  # specify the engine here
-            prompt=prompt,
-            max_tokens=100,
-            temperature=0.0
-        )
+        product_list = "##".join(self.products.keys())
 
-        response_text = response.choices[0].text.strip()
+        delimiter = "####"
 
-        return response_text
+        system_message = f"""
+        You are a customer of a store.\
+        The store has product list as {product_list} delimited with ## characters: \
+        Randomly select fewer than 2 products from the list to inquire. \
+        Products should have equal probability of being consulted. \
+        You need to query details about the products. \
+        The specific requirements will be delimited with \
+        {delimiter} characters.\
+        Only generate a comment to inquire, with nothing else.\
+        """
+
+        user_message_1 = f"""
+            Inquire in {self.language} language. Using 100 words at most. \
+        """
+
+        messages =  [  
+            {'role':'system', 
+            'content': system_message},    
+            {'role':'user', 
+            'content': f"{delimiter}{user_message_1}{delimiter}"},  
+        ]
+
+        return get_completion_from_messages(messages)
 
